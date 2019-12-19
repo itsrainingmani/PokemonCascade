@@ -148,6 +148,18 @@ def save(mapSquare):
 	savefile = 'mapSquares' + sep + text + '.png'
 	pygame.image.save(surface, savefile)
 
+def autosave(mapSquare):
+	text = 'autosave'
+	saveSquare = MapSquare(mapSquare)
+
+	saveSquare.set_group('temp')
+	save_map_square(saveSquare, text)
+
+	mapImages = load_map(mapSquare, scaleImages=False)
+	surface = draw_map(mapImages, returnSurface=True)
+	savefile = 'mapSquares' + sep + text + '.png'
+	pygame.image.save(surface, savefile)
+
 
 def set_decoration(mapSquare, area, tileSetFolder, tileCoords):
 	yMin, yMax = 0, 15
@@ -564,7 +576,7 @@ def main():
 			column.append((x, y))
 		mapCoords.append(column)
 
-
+	changeCount = 0
 	while True:
 		DISPLAYSURF.fill(BLACK)
 
@@ -645,6 +657,8 @@ def main():
 					mapSquare, tileCoords = set_tiles(mapSquare, area, tileSetFolder, tileCoords)
 					mapImages = load_map(mapSquare)
 
+					changeCount += 1
+
 				elif event.key == K_b:
 					columns = mapCoords[xStart:xEnd]
 					area = [y[yStart:yEnd] for y in columns]
@@ -652,11 +666,15 @@ def main():
 					mapSquare, tileCoords = set_decoration(mapSquare, area, tileSetFolder, tileCoords)
 					mapImages = load_map(mapSquare)
 
+					changeCount += 1
+
 				elif keys[K_LCTRL] and event.key == K_f:
 					mapArea, tileCoords = fill_map(tileSetFolder, tileCoords)
 					if mapArea != None:
 						mapSquare = mapArea
 						mapImages = load_map(mapSquare)
+
+						changeCount += 1
 
 				elif keys[K_LCTRL] and event.key == K_e:
 					columns = mapCoords[xStart:xEnd]
@@ -668,13 +686,19 @@ def main():
 					mapSquare[squareX][squareY].rotate()
 					mapImages[squareX][squareY] = mapSquare[squareX][squareY].draw(BOXSIZE)
 
+					changeCount += 1
+
 				elif keys[K_LCTRL] and event.key == K_h:
 					mapSquare[squareX][squareY].flip_horizontal()
 					mapImages[squareX][squareY] = mapSquare[squareX][squareY].draw(BOXSIZE)
 
+					changeCount += 1
+
 				elif keys[K_LCTRL] and event.key == K_v:
 					mapSquare[squareX][squareY].flip_vertical()
 					mapImages[squareX][squareY] = mapSquare[squareX][squareY].draw(BOXSIZE)
+
+					changeCount += 1
 
 
 			elif event.type == MOUSEBUTTONUP:
@@ -692,6 +716,7 @@ def main():
 
 				elif saveRect.collidepoint(mouseX, mouseY):
 					save(mapSquare)
+					changeCount = 0
 
 
 				else:
@@ -702,6 +727,15 @@ def main():
 
 			else:
 				continue
+
+		if changeCount == 10:
+			surf, text = make_text('autosaving...', WHITE, BLACK, left, top, size=FONTSIZE)
+			DISPLAYSURF.blit(surf, text)
+			pygame.display.update()
+
+			autosave(mapSquare)
+			changeCount = 0
+
 		columns = mapCoords[xStart:xEnd]
 		area = [y[yStart:yEnd] for y in columns]
 		draw_tile_params(mapSquare, area)
